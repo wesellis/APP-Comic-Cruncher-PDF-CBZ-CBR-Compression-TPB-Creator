@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBR to CBZ Converter - Comic Book Archive Conversion Tool</title>
+    <meta name="description" content="PowerShell script for converting Comic Book Archive (CBR) files to CBZ format with optional JPEG to WebP optimization">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #f5f5f5; 
+            color: #333; 
+            line-height: 1.6; 
+        }
+        .header { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white; 
+            padding: 4rem 0; 
+            text-align: center; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+        }
+        .header h1 { font-size: 3rem; margin-bottom: 1rem; font-weight: 300; }
+        .header p { font-size: 1.2rem; opacity: 0.9; max-width: 600px; margin: 0 auto; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .main-content { padding: 4rem 0; }
+        .section { background: white; margin: 2rem 0; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .section h2 { color: #667eea; margin-bottom: 1.5rem; font-size: 2rem; }
+        .section h3 { color: #555; margin: 1.5rem 0 1rem; font-size: 1.3rem; }
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin: 2rem 0; }
+        .feature-card { 
+            background: #f8f9fa; 
+            padding: 1.5rem; 
+            border-radius: 6px; 
+            border-left: 4px solid #667eea; 
+        }
+        .feature-card h4 { color: #667eea; margin-bottom: 0.5rem; }
+        .code-block { 
+            background: #1e1e1e; 
+            color: #d4d4d4; 
+            padding: 1.5rem; 
+            border-radius: 6px; 
+            overflow-x: auto; 
+            margin: 1rem 0; 
+            font-family: 'Consolas', 'Monaco', monospace; 
+        }
+        .code-block pre { margin: 0; }
+        .requirements-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; }
+        .requirement { 
+            background: #e8f4f8; 
+            padding: 1rem; 
+            border-radius: 6px; 
+            border-left: 3px solid #17a2b8; 
+        }
+        .requirement h4 { color: #17a2b8; margin-bottom: 0.5rem; }
+        .download-section { text-align: center; background: #f8f9fa; padding: 2rem; border-radius: 8px; }
+        .download-btn { 
+            display: inline-block; 
+            background: #667eea; 
+            color: white; 
+            padding: 1rem 2rem; 
+            text-decoration: none; 
+            border-radius: 6px; 
+            font-weight: 600; 
+            margin: 0.5rem; 
+            transition: background 0.3s; 
+        }
+        .download-btn:hover { background: #5a6fd8; }
+        .footer { 
+            background: #333; 
+            color: white; 
+            text-align: center; 
+            padding: 2rem 0; 
+            margin-top: 4rem; 
+        }
+        .footer a { color: #667eea; text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+        .workflow { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin: 2rem 0; 
+            flex-wrap: wrap; 
+        }
+        .workflow-step { 
+            background: #667eea; 
+            color: white; 
+            padding: 1rem; 
+            border-radius: 50%; 
+            width: 60px; 
+            height: 60px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: bold; 
+            margin: 0.5rem; 
+        }
+        .workflow-arrow { color: #667eea; font-size: 1.5rem; margin: 0 1rem; }
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2rem; }
+            .container { padding: 0 15px; }
+            .workflow { flex-direction: column; }
+            .workflow-arrow { transform: rotate(90deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>CBR to CBZ Converter</h1>
+            <p>Professional PowerShell tool for converting Comic Book Archives with JPEG to WebP optimization</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="main-content">
+            
+            <!-- Overview Section -->
+            <div class="section">
+                <h2>Overview</h2>
+                <p>The CBR to CBZ Converter is a powerful PowerShell script designed to batch convert Comic Book Archive files from RAR format (CBR) to ZIP format (CBZ). It includes advanced features like parallel processing and optional JPEG to WebP compression for significantly smaller file sizes.</p>
+                
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>Batch Processing</h4>
+                        <p>Convert multiple files simultaneously with automatic discovery and processing of all CBR files in a directory.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Image Optimization</h4>
+                        <p>Optional JPEG to WebP conversion reduces file sizes by up to 30% while maintaining visual quality.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Parallel Processing</h4>
+                        <p>Utilizes PowerShell 7.1+ parallel features for faster conversion of large collections.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Automatic Cleanup</h4>
+                        <p>Smart temporary file management ensures no leftover files after conversion.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- How It Works -->
+            <div class="section">
+                <h2>Conversion Process</h2>
+                <div class="workflow">
+                    <div class="workflow-step">1</div>
+                    <div class="workflow-arrow">→</div>
+                    <div class="workflow-step">2</div>
+                    <div class="workflow-arrow">→</div>
+                    <div class="workflow-step">3</div>
+                    <div class="workflow-arrow">→</div>
+                    <div class="workflow-step">4</div>
+                    <div class="workflow-arrow">→</div>
+                    <div class="workflow-step">5</div>
+                </div>
+                <div style="display: flex; justify-content: space-between; flex-wrap: wrap; margin-top: 1rem;">
+                    <div style="text-align: center; margin: 0.5rem;">
+                        <strong>Scan</strong><br>
+                        <small>Find CBR files</small>
+                    </div>
+                    <div style="text-align: center; margin: 0.5rem;">
+                        <strong>Extract</strong><br>
+                        <small>Unpack archives</small>
+                    </div>
+                    <div style="text-align: center; margin: 0.5rem;">
+                        <strong>Convert</strong><br>
+                        <small>JPEG → WebP</small>
+                    </div>
+                    <div style="text-align: center; margin: 0.5rem;">
+                        <strong>Repack</strong><br>
+                        <small>Create CBZ</small>
+                    </div>
+                    <div style="text-align: center; margin: 0.5rem;">
+                        <strong>Cleanup</strong><br>
+                        <small>Remove temps</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Requirements Section -->
+            <div class="section">
+                <h2>System Requirements</h2>
+                <div class="requirements-list">
+                    <div class="requirement">
+                        <h4>PowerShell 7.1+</h4>
+                        <p>Required for parallel processing features. Download from Microsoft PowerShell GitHub.</p>
+                    </div>
+                    <div class="requirement">
+                        <h4>7-Zip</h4>
+                        <p>Essential for archive extraction and compression. Must be in system PATH.</p>
+                    </div>
+                    <div class="requirement">
+                        <h4>nConvert (Optional)</h4>
+                        <p>Required only for JPEG to WebP conversion. Download from XnView.</p>
+                    </div>
+                    <div class="requirement">
+                        <h4>libwebp.dll</h4>
+                        <p>WebP plugin for nConvert. Place in nConvert "Plugins" folder.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Usage Section -->
+            <div class="section">
+                <h2>Quick Start</h2>
+                
+                <h3>Installation</h3>
+                <div class="code-block">
+                    <pre>git clone https://github.com/wesellis/CBR-to-CBZ-Converter.git
+cd CBR-to-CBZ-Converter</pre>
+                </div>
+
+                <h3>Basic Usage</h3>
+                <div class="code-block">
+                    <pre># Navigate to your comic book directory
+cd "C:\Comics\My Collection"
+
+# Copy the converter script
+copy "C:\path\to\ConverterPS.ps1" .
+
+# Run the conversion
+.\ConverterPS.ps1</pre>
+                </div>
+
+                <h3>Example Output</h3>
+                <div class="code-block">
+                    <pre>This script will convert all .cbr files in the current directory to .cbz
+
+Press 'y' followed by ENTER to convert jpegs to webp: y
+
+Processing CBZ files...
+Processing CBR files...
+Converting Amazing Spider-Man #1.cbr...
+Converting Batman #1.cbr...
+
+Conversion completed in 2 minutes 45 seconds.</pre>
+                </div>
+            </div>
+
+            <!-- Performance Section -->
+            <div class="section">
+                <h2>Performance & Configuration</h2>
+                <p>The script includes configurable parameters for optimal performance:</p>
+                
+                <div class="code-block">
+                    <pre># Adjust parallel processing cores (default: 12)
+$cores = 12
+
+# Custom temporary directory
+$temppath = "C:\Temp\Convert-temp"
+
+# WebP quality setting (85% recommended)
+-q 85</pre>
+                </div>
+
+                <h3>Performance Tips</h3>
+                <ul style="margin-left: 2rem; margin-top: 1rem;">
+                    <li>Use SSD storage for temporary files for faster I/O</li>
+                    <li>Adjust core count based on your CPU capabilities</li>
+                    <li>Close unnecessary applications during large batch conversions</li>
+                    <li>Ensure adequate free space (2-3x the size of input files)</li>
+                </ul>
+            </div>
+
+            <!-- Download Section -->
+            <div class="download-section">
+                <h2>Get Started Today</h2>
+                <p>Download the CBR to CBZ Converter and start optimizing your comic book collection.</p>
+                <a href="https://github.com/wesellis/CBR-to-CBZ-Converter" class="download-btn">View on GitHub</a>
+                <a href="https://github.com/wesellis/CBR-to-CBZ-Converter/archive/refs/heads/main.zip" class="download-btn">Download ZIP</a>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="container">
+            <p><strong>CBR to CBZ Converter</strong> by <a href="https://wesellis.com">Wesley Ellis</a></p>
+            <p>Licensed under MIT License | <a href="mailto:wes@wesellis.com">wes@wesellis.com</a></p>
+            <p style="margin-top: 1rem; opacity: 0.8;">Professional comic book archive conversion for digital libraries</p>
+        </div>
+    </div>
+
+</body>
+</html>
