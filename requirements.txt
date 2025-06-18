@@ -1,0 +1,4 @@
+PyQt6>=6.6.0
+Pillow>=10.0.0
+pdf2image>=1.17.0
+rarfile>=4.1
