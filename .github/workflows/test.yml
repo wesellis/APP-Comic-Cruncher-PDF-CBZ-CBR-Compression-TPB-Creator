@@ -29,7 +29,8 @@ jobs:
         sudo apt-get update
         # Essential dependencies for PyQt6 and comic processing
         sudo apt-get install -y poppler-utils unrar
-        sudo apt-get install -y libxcb-xinerama0 libgl1-mesa-glx
+        # Updated OpenGL dependencies for newer Ubuntu
+        sudo apt-get install -y libopengl0 libxcb-xinerama0
         sudo apt-get install -y xvfb  # Virtual display for GUI testing
 
     - name: Install system dependencies (macOS)
@@ -55,23 +56,23 @@ jobs:
         python -c "
         print('Testing core dependencies...')
         import PyQt6.QtWidgets
-        print('✓ PyQt6: OK')
+        print('PyQt6: OK')
         import PIL
-        print('✓ Pillow: OK')
+        print('Pillow: OK')
         try:
             import pdf2image
-            print('✓ pdf2image: OK')
+            print('pdf2image: OK')
         except Exception as e:
-            print(f'⚠ pdf2image: {e} (Poppler may not be installed)')
+            print(f'pdf2image: {e} (Poppler may not be installed)')
         import rarfile
-        print('✓ rarfile: OK')
+        print('rarfile: OK')
         print('Core dependency test completed.')
         "
 
     - name: Syntax validation
       run: |
         python -m py_compile comic_cruncher.py
-        echo "✓ Python syntax validation passed"
+        echo "Python syntax validation passed"
 
     - name: Test application imports
       run: |
@@ -86,11 +87,11 @@ jobs:
         try:
             # Test importing main classes without instantiating GUI
             import comic_cruncher
-            print('✓ Main module imported successfully')
+            print('Main module imported successfully')
             
             # Test specific classes can be imported
             from comic_cruncher import ImageProcessor, format_file_size
-            print('✓ Utility classes imported successfully')
+            print('Utility classes imported successfully')
             
             print('Application import test completed successfully!')
         except ImportError as e:
@@ -110,7 +111,7 @@ jobs:
         assert format_file_size(0) == '0B'
         assert format_file_size(1024) == '1.0KB'
         assert format_file_size(1048576) == '1.0MB'
-        print('✓ Utility functions working correctly')
+        print('Utility functions working correctly')
         
         print('All tests passed!')
         "
@@ -134,7 +135,7 @@ jobs:
       run: |
         # Check for Python syntax errors and undefined names
         flake8 comic_cruncher.py --count --select=E9,F63,F7,F82 --show-source --statistics
-        echo "✓ No critical syntax errors found"
+        echo "No critical syntax errors found"
         
         # Check for style issues (non-blocking)
         echo "Checking code style (warnings only):"
@@ -169,8 +170,8 @@ jobs:
         
         try:
             compile(code, 'comic_cruncher.py', 'exec')
-            print('✓ Code is compatible with this Python version')
+            print('Code is compatible with this Python version')
         except SyntaxError as e:
-            print(f'✗ Syntax error: {e}')
+            print(f'Syntax error: {e}')
             sys.exit(1)
         "

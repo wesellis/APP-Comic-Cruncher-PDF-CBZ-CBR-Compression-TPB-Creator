@@ -30,7 +30,7 @@ jobs:
     - name: Validate syntax
       run: |
         python -m py_compile comic_cruncher.py
-        echo "✅ Python syntax is valid"
+        echo "Python syntax is valid"
 
     - name: Test imports
       run: |
@@ -43,28 +43,28 @@ jobs:
         for module in modules:
             try:
                 __import__(module)
-                print(f'✅ {module} imported successfully')
+                print(f'{module} imported successfully')
             except ImportError as e:
-                print(f'⚠️  {module} import failed: {e}')
+                print(f'{module} import failed: {e}')
         
         # Test application can be imported
         try:
             import comic_cruncher
-            print('✅ Main application imported successfully')
+            print('Main application imported successfully')
         except Exception as e:
-            print(f'⚠️  Application import: {e}')
+            print(f'Application import: {e}')
         "
 
     - name: Check file structure
       run: |
-        echo "📁 Project structure:"
+        echo "Project structure:"
         ls -la
         echo ""
-        echo "📋 Required files check:"
+        echo "Required files check:"
         for file in comic_cruncher.py requirements.txt README.md LICENSE; do
           if [ -f "$file" ]; then
-            echo "✅ $file exists"
+            echo "$file exists"
           else
-            echo "❌ $file missing"
+            echo "$file missing"
           fi
         done

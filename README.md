@@ -1,5 +1,10 @@
 # Comic Cruncher & Combiner
 
+![Test Status](https://github.com/wesellis/CBR-to-CBZ-Converter/workflows/Test%20Comic%20Cruncher/badge.svg)
+![Quick Validation](https://github.com/wesellis/CBR-to-CBZ-Converter/workflows/Quick%20Validation/badge.svg)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)
+
 A powerful dual-mode comic processing application with parallel processing and modern UI. Features both comic compression/optimization and TPB (Trade Paperback) collection creation capabilities.
 
 ## 🚀 Features
