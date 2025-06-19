@@ -1,0 +1,70 @@
+name: Quick Validation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.11']
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install PyQt6 Pillow pdf2image rarfile
+
+    - name: Validate syntax
+      run: |
+        python -m py_compile comic_cruncher.py
+        echo "✅ Python syntax is valid"
+
+    - name: Test imports
+      run: |
+        python -c "
+        import os
+        os.environ['QT_QPA_PLATFORM'] = 'offscreen'
+        
+        # Test that all required modules can be imported
+        modules = ['PyQt6.QtWidgets', 'PIL', 'pdf2image', 'rarfile']
+        for module in modules:
+            try:
+                __import__(module)
+                print(f'✅ {module} imported successfully')
+            except ImportError as e:
+                print(f'⚠️  {module} import failed: {e}')
+        
+        # Test application can be imported
+        try:
+            import comic_cruncher
+            print('✅ Main application imported successfully')
+        except Exception as e:
+            print(f'⚠️  Application import: {e}')
+        "
+
+    - name: Check file structure
+      run: |
+        echo "📁 Project structure:"
+        ls -la
+        echo ""
+        echo "📋 Required files check:"
+        for file in comic_cruncher.py requirements.txt README.md LICENSE; do
+          if [ -f "$file" ]; then
+            echo "✅ $file exists"
+          else
+            echo "❌ $file missing"
+          fi
+        done

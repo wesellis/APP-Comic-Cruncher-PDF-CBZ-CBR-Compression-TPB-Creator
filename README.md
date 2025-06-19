@@ -125,25 +125,35 @@ README.md            # This documentation
 - Install Poppler as described above
 - Ensure Poppler's `bin` folder is in system PATH
 - Restart command prompt after PATH changes
+- Test with: `pdftoppm -h` (should show help)
 
 **"Cannot extract CBR files"**
-- Install WinRAR or 7-Zip on Windows
-- Install `unrar` package on Linux/macOS
+- **Windows**: Install WinRAR or 7-Zip
+- **Linux**: `sudo apt-get install unrar`
+- **macOS**: `brew install unar` (note: unar, not unrar)
 
 **Slow processing**
 - App automatically uses all CPU cores
 - Large files require more processing time
 - Ensure adequate RAM for batch operations
+- Close other applications during processing
 
 **Combiner not detecting series**
 - Check file naming follows supported patterns
 - Ensure issue numbers are present and numerical
 - Use consistent naming across all issues
+- Remove special characters from filenames
+
+**GUI won't start**
+- Ensure all dependencies installed: `pip install -r requirements.txt`
+- On Linux: Install GUI dependencies: `sudo apt-get install libxcb-xinerama0 libgl1-mesa-glx`
+- Try running in terminal to see error messages
 
 ### Quick Fixes
-- Run `fix_dependencies.bat` to resolve common package conflicts
-- Check `install.bat` output for any failed installations
+- **Windows**: Run `fix_dependencies.bat` to resolve package conflicts
+- **All platforms**: Check `install.bat` output for failed installations
 - Verify Python 3.8+ is installed and in PATH
+- Update pip: `python -m pip install --upgrade pip`
 
 ## 🎨 Interface Overview
 
