@@ -6,7 +6,27 @@
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)
 
+**🌐 [Visit the Official Website](https://wesellis.github.io/CBR-to-CBZ-Converter/)**
+
 A powerful dual-mode comic processing application with parallel processing and modern UI. Features both comic compression/optimization and TPB (Trade Paperback) collection creation capabilities.
+
+## 📱 Screenshots
+
+<div align="center">
+
+### Comic Cruncher Mode
+![Comic Cruncher Interface](assets/2025-06-18%2017_02_51-Comic%20Cruncher.png)
+*Main compression interface with real-time progress tracking and activity feed*
+
+### Comic Combiner Mode  
+![Comic Combiner Mode](assets/2025-06-19%2006_43_51-Comic%20Cruncher.png)
+*TPB creation mode for combining sequential issues into organized collections*
+
+### Batch Processing
+![Processing View](assets/2025-06-19%2006_44_01-Claude.png)
+*Advanced batch processing with detailed progress tracking and file size reporting*
+
+</div>
 
 ## 🚀 Features
 
@@ -64,7 +84,7 @@ A powerful dual-mode comic processing application with parallel processing and m
 3. **Install RAR support (for CBR files):**
    - **Windows**: Install WinRAR or 7-Zip
    - **Linux**: `sudo apt-get install unrar`
-   - **macOS**: `brew install unrar`
+   - **macOS**: `brew install unar` (note: unar, not unrar)
 
 ## 🎯 Usage
 
@@ -92,6 +112,8 @@ run.bat              # Windows launcher with error checking
 fix_dependencies.bat  # Troubleshooting utility
 README.md            # This documentation
 .gitignore           # Git ignore file
+assets/              # Screenshots and media
+docs/                # GitHub Pages website
 ```
 
 ## 🔧 Technical Details
@@ -228,12 +250,22 @@ MIT License - Feel free to use, modify, and distribute!
 
 ## 🔗 Links
 
-- **Poppler Downloads**: [poppler-windows releases](https://github.com/oschwartz10612/poppler-windows/releases/)
-- **Python Downloads**: [python.org](https://python.org)
-- **WinRAR**: [win-rar.com](https://win-rar.com)
+- **🌐 [Official Website](https://wesellis.github.io/CBR-to-CBZ-Converter/)**
+- **📥 [Latest Release](https://github.com/wesellis/CBR-to-CBZ-Converter/releases)**
+- **🐛 [Report Issues](https://github.com/wesellis/CBR-to-CBZ-Converter/issues)**
+- **📚 [Documentation](https://github.com/wesellis/CBR-to-CBZ-Converter/blob/main/README.md)**
+- **🤝 [Contributing Guide](https://github.com/wesellis/CBR-to-CBZ-Converter/blob/main/CONTRIBUTING.md)**
 
 ---
 
 **Version**: 2.0  
 **Last Updated**: June 2025  
 **Compatibility**: Windows 10/11, Linux, macOS
+
+<div align="center">
+
+**Made with ❤️ for comic enthusiasts**
+
+[⭐ Star this repo](https://github.com/wesellis/CBR-to-CBZ-Converter) | [🍴 Fork it](https://github.com/wesellis/CBR-to-CBZ-Converter/fork) | [📥 Download](https://github.com/wesellis/CBR-to-CBZ-Converter/releases)
+
+</div>
