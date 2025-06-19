@@ -15,15 +15,15 @@ A powerful dual-mode comic processing application with parallel processing and m
 <div align="center">
 
 ### Comic Cruncher Mode
-![Comic Cruncher Interface](assets/2025-06-18%2017_02_51-Comic%20Cruncher.png)
+![Comic Cruncher Interface](assets/ComicCruncher1.png)
 *Main compression interface with real-time progress tracking and activity feed*
 
 ### Comic Combiner Mode  
-![Comic Combiner Mode](assets/2025-06-19%2006_43_51-Comic%20Cruncher.png)
+![Comic Combiner Mode](assets/ComicCombiner1.png)
 *TPB creation mode for combining sequential issues into organized collections*
 
 ### Batch Processing
-![Processing View](assets/2025-06-19%2006_44_01-Claude.png)
+![Processing View](assets/ComicCombiner2.png)
 *Advanced batch processing with detailed progress tracking and file size reporting*
 
 </div>

@@ -1,9 +1,57 @@
-name: Deploy GitHub Pages
+name: Deploy to GitHub Pages
 
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Setup Pages (if not enabled)
+      continue-on-error: true
+      id: pages
+      uses: actions/configure-pages@v4
+      
+    - name: Build site
+      run: |
+        # Create build directory
+        mkdir -p _site
+        cp -r docs/* _site/
+        
+        # Copy assets with clean names
+        mkdir -p _site/assets
+        cp "assets/ComicCruncher1.png" "_site/assets/ComicCruncher1.png"
+        cp "assets/ComicCombiner1.png" "_site/assets/ComicCombiner1.png"
+        cp "assets/ComicCombiner2.png" "_site/assets/ComicCombiner2.png"
+        
+        echo "Site built successfully with updated assets"
+        
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: ./_site
+        
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+      if: steps.pages.outcome == 'success'
+      
+    - name: Alternative deployment info
+      if: steps.pages.outcome != 'success'
+      run: |
+        echo "GitHub Pages not enabled. To enable:"
+        echo "1. Go to repository Settings"
+        echo "2. Navigate to Pages section"
+        echo "3. Set Source to 'GitHub Actions'"
+        echo "4. Re-run this workflow"
+        echo ""
+        echo "Your website files are ready in the _site/ folder!"
 
 permissions:
   contents: read
@@ -13,26 +61,3 @@ permissions:
 concurrency:
   group: "pages"
   cancel-in-progress: false
-
-jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      
-    - name: Setup Pages
-      uses: actions/configure-pages@v4
-      
-    - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: './docs'
-        
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
