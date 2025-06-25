@@ -15,6 +15,15 @@ from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 import multiprocessing
 from functools import partial
 import re
+import io
+
+# GPU acceleration imports
+try:
+    import cv2
+    import numpy as np
+    GPU_AVAILABLE = True
+except ImportError:
+    GPU_AVAILABLE = False
 
 def format_file_size(size_bytes):
     """Convert bytes to human readable format"""
@@ -146,6 +155,10 @@ class ComicCombiner(QThread):
             
             self.finished.emit(True, message)
                 
+        except MemoryError as e:
+            self.finished.emit(False, f"Memory Error: Not enough memory to combine files. Try fewer files at once.")
+        except PermissionError as e:
+            self.finished.emit(False, f"Permission Error: Cannot access files. Check file permissions.")
         except Exception as e:
             self.finished.emit(False, f"Combination error: {str(e)}")
     
@@ -289,21 +302,29 @@ class ComicCombiner(QThread):
         self.should_stop = True
 
 class ImageProcessor:
-    """Handles image processing with parallel execution"""
+    """Handles image processing with parallel execution and GPU acceleration"""
     
     @staticmethod
-    def process_image(image_data, target_size=2500, quality=85):
-        """Process a single image: resize and convert to WebP"""
+    def process_image_gpu(image_data, target_size=2500, quality=85):
+        """GPU-accelerated image processing using OpenCV"""
+        if not GPU_AVAILABLE:
+            return ImageProcessor.process_image(image_data, target_size, quality)
+        
         try:
             if isinstance(image_data, tuple):
                 image_path, temp_dir = image_data
-                with Image.open(image_path) as img:
-                    # Convert to RGB if necessary
-                    if img.mode in ('RGBA', 'LA', 'P'):
-                        img = img.convert('RGB')
+                try:
+                    # Use OpenCV for faster loading and processing
+                    img_bgr = cv2.imread(image_path, cv2.IMREAD_COLOR)
+                    if img_bgr is None:
+                        # Fallback to PIL if OpenCV can't read
+                        return ImageProcessor.process_image(image_data, target_size, quality)
+                    
+                    # Convert BGR to RGB
+                    img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
                     
                     # Calculate new size maintaining aspect ratio
-                    width, height = img.size
+                    height, width = img_rgb.shape[:2]
                     if max(width, height) > target_size:
                         if width > height:
                             new_width = target_size
@@ -312,13 +333,80 @@ class ImageProcessor:
                             new_height = target_size
                             new_width = int((width * target_size) / height)
                         
-                        img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                        # GPU-accelerated resize using OpenCV
+                        img_rgb = cv2.resize(img_rgb, (new_width, new_height), interpolation=cv2.INTER_LANCZOS4)
+                    
+                    # Convert back to PIL for WebP saving
+                    pil_image = Image.fromarray(img_rgb)
                     
                     # Save as WebP
                     output_name = Path(image_path).stem + '.webp'
                     output_path = os.path.join(temp_dir, output_name)
-                    img.save(output_path, 'WEBP', quality=quality, optimize=True)
+                    pil_image.save(output_path, 'WEBP', quality=quality, optimize=True)
                     return output_path
+                finally:
+                    # Clean up source file after processing
+                    try:
+                        os.remove(image_path)
+                    except (OSError, PermissionError):
+                        pass
+            else:
+                # Direct PIL Image object - convert to numpy for GPU processing
+                img_array = np.array(image_data)
+                
+                # Calculate new size maintaining aspect ratio
+                height, width = img_array.shape[:2]
+                if max(width, height) > target_size:
+                    if width > height:
+                        new_width = target_size
+                        new_height = int((height * target_size) / width)
+                    else:
+                        new_height = target_size
+                        new_width = int((width * target_size) / height)
+                    
+                    # GPU-accelerated resize
+                    img_array = cv2.resize(img_array, (new_width, new_height), interpolation=cv2.INTER_LANCZOS4)
+                
+                return Image.fromarray(img_array)
+        except Exception as e:
+            print(f"GPU processing failed, falling back to CPU: {e}")
+            return ImageProcessor.process_image(image_data, target_size, quality)
+    
+    @staticmethod
+    def process_image(image_data, target_size=2500, quality=85):
+        """Process a single image: resize and convert to WebP"""
+        try:
+            if isinstance(image_data, tuple):
+                image_path, temp_dir = image_data
+                try:
+                    with Image.open(image_path) as img:
+                        # Convert to RGB if necessary
+                        if img.mode in ('RGBA', 'LA', 'P'):
+                            img = img.convert('RGB')
+                        
+                        # Calculate new size maintaining aspect ratio
+                        width, height = img.size
+                        if max(width, height) > target_size:
+                            if width > height:
+                                new_width = target_size
+                                new_height = int((height * target_size) / width)
+                            else:
+                                new_height = target_size
+                                new_width = int((width * target_size) / height)
+                            
+                            img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                        
+                        # Save as WebP
+                        output_name = Path(image_path).stem + '.webp'
+                        output_path = os.path.join(temp_dir, output_name)
+                        img.save(output_path, 'WEBP', quality=quality, optimize=True)
+                        return output_path
+                finally:
+                    # Clean up source file after processing
+                    try:
+                        os.remove(image_path)
+                    except (OSError, PermissionError):
+                        pass  # File might already be gone or locked
             else:
                 # Direct PIL Image object
                 img = image_data
@@ -460,7 +548,9 @@ class BatchProcessor(QThread):
                 else:
                     image_tasks = [(img_path, temp_dir) for img_path in images]
                     with ProcessPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
-                        futures = [executor.submit(ImageProcessor.process_image, task) for task in image_tasks]
+                        # Use GPU acceleration if available
+                        process_func = ImageProcessor.process_image_gpu if GPU_AVAILABLE else ImageProcessor.process_image
+                        futures = [executor.submit(process_func, task) for task in image_tasks]
                         for future in futures:
                             result = future.result()
                             if result:
@@ -469,11 +559,12 @@ class BatchProcessor(QThread):
                 if not processed_images:
                     return ("error", "Failed to process any images")
                 
-                # Create CBZ
+                # Create CBZ with optimized compression
                 temp_cbz_path = file_path.parent / f"temp_{file_path.stem}.cbz"
-                with zipfile.ZipFile(temp_cbz_path, 'w', zipfile.ZIP_DEFLATED) as cbz:
+                with zipfile.ZipFile(temp_cbz_path, 'w', zipfile.ZIP_DEFLATED, compresslevel=1) as cbz:
                     for img_path in sorted(processed_images):
                         if os.path.exists(img_path):
+                            # Use minimal compression for WebP files (already compressed)
                             cbz.write(img_path, os.path.basename(img_path))
                 
                 # Replace original
@@ -533,19 +624,46 @@ class BatchProcessor(QThread):
             return False
     
     def extract_from_pdf(self, pdf_path):
+        """Extract images from PDF with batch processing to prevent memory issues"""
         try:
-            return pdf2image.convert_from_path(pdf_path, dpi=300)
-        except Exception:
+            # Get total pages first
+            info = pdf2image.pdfinfo_from_path(pdf_path)
+            max_pages = info["Pages"]
+            batch_size = 5  # Process 5 pages at a time
+            images = []
+            
+            for i in range(0, max_pages, batch_size):
+                if self.should_stop:
+                    return images
+                    
+                # Process batch
+                batch = pdf2image.convert_from_path(
+                    pdf_path, dpi=300,
+                    first_page=i+1, 
+                    last_page=min(i+batch_size, max_pages)
+                )
+                images.extend(batch)
+                del batch  # Free memory immediately
+            
+            return images
+        except (pdf2image.exceptions.PDFInfoNotInstalledError, pdf2image.exceptions.PDFPageCountError) as e:
+            print(f"PDF processing error: {e}")
+            return []
+        except Exception as e:
+            print(f"Unexpected error extracting from PDF: {e}")
             return []
     
     def extract_from_cbz(self, cbz_path):
         images = []
         try:
-            with zipfile.ZipFile(cbz_path, 'r') as cbz:
-                for filename in sorted(cbz.namelist()):
-                    if filename.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.webp')):
-                        cbz.extract(filename, path=tempfile.gettempdir())
-                        images.append(os.path.join(tempfile.gettempdir(), filename))
+            with tempfile.TemporaryDirectory() as temp_dir:
+                with zipfile.ZipFile(cbz_path, 'r') as cbz:
+                    for filename in sorted(cbz.namelist()):
+                        if filename.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.webp')):
+                            cbz.extract(filename, path=temp_dir)
+                            images.append(os.path.join(temp_dir, filename))
+                # Process images while temp_dir exists
+                return list(images)  # Return copy before temp_dir is cleaned
         except Exception:
             pass
         return images
@@ -553,11 +671,14 @@ class BatchProcessor(QThread):
     def extract_from_cbr(self, cbr_path):
         images = []
         try:
-            with rarfile.RarFile(cbr_path, 'r') as cbr:
-                for filename in sorted(cbr.namelist()):
-                    if filename.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.webp')):
-                        cbr.extract(filename, path=tempfile.gettempdir())
-                        images.append(os.path.join(tempfile.gettempdir(), filename))
+            with tempfile.TemporaryDirectory() as temp_dir:
+                with rarfile.RarFile(cbr_path, 'r') as cbr:
+                    for filename in sorted(cbr.namelist()):
+                        if filename.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.webp')):
+                            cbr.extract(filename, path=temp_dir)
+                            images.append(os.path.join(temp_dir, filename))
+                # Process images while temp_dir exists
+                return list(images)  # Return copy before temp_dir is cleaned
         except Exception:
             pass
         return images
@@ -633,8 +754,9 @@ class ComicProcessor(QThread):
                     image_tasks = [(img_path, temp_dir) for img_path in images]
                     
                     with ProcessPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
-                        futures = [executor.submit(ImageProcessor.process_image, task) 
-                                 for task in image_tasks]
+                        # Use GPU acceleration if available
+                        process_func = ImageProcessor.process_image_gpu if GPU_AVAILABLE else ImageProcessor.process_image
+                        futures = [executor.submit(process_func, task) for task in image_tasks]
                         
                         processed_images = []
                         for i, future in enumerate(futures):
@@ -656,12 +778,13 @@ class ComicProcessor(QThread):
                 # Create temporary CBZ file first
                 temp_cbz_path = file_path.parent / f"temp_{file_path.stem}.cbz"
                 
-                with zipfile.ZipFile(temp_cbz_path, 'w', zipfile.ZIP_DEFLATED) as cbz:
+                with zipfile.ZipFile(temp_cbz_path, 'w', zipfile.ZIP_DEFLATED, compresslevel=1) as cbz:
                     for img_path in sorted(processed_images):
                         if self.should_stop:
                             return
                         if os.path.exists(img_path):
                             arcname = os.path.basename(img_path)
+                            # Use minimal compression for WebP files (already compressed)
                             cbz.write(img_path, arcname)
                 
                 self.progress_update.emit("REPACKAGING", 95)
@@ -692,13 +815,31 @@ class ComicProcessor(QThread):
                 self.progress_update.emit("REPACKAGING", 100)
                 self.finished.emit(True, "Comic processed successfully!")
                 
+        except MemoryError as e:
+            self.finished.emit(False, f"Memory Error: File too large. Try reducing batch size or closing other applications.")
+        except PermissionError as e:
+            self.finished.emit(False, f"Permission Error: Cannot access file. Check file permissions and try again.")
+        except FileNotFoundError as e:
+            self.finished.emit(False, f"File Error: File not found or moved during processing.")
         except Exception as e:
             self.finished.emit(False, f"Error: {str(e)}")
+        finally:
+            # Cleanup any remaining temp files
+            try:
+                if hasattr(self, 'temp_dir') and os.path.exists(self.temp_dir):
+                    shutil.rmtree(self.temp_dir, ignore_errors=True)
+            except:
+                pass
     
     def process_pdf_image(self, pil_image, temp_dir, index):
-        """Process a single PDF image"""
+        """Process a single PDF image with GPU acceleration"""
         try:
-            processed_img = ImageProcessor.process_image(pil_image)
+            # Use GPU acceleration if available
+            if GPU_AVAILABLE:
+                processed_img = ImageProcessor.process_image_gpu(pil_image)
+            else:
+                processed_img = ImageProcessor.process_image(pil_image)
+            
             if processed_img:
                 output_path = os.path.join(temp_dir, f"page_{index:04d}.webp")
                 processed_img.save(output_path, 'WEBP', quality=85, optimize=True)
@@ -708,10 +849,33 @@ class ComicProcessor(QThread):
         return None
     
     def extract_from_pdf(self, pdf_path):
-        """Extract images from PDF"""
+        """Extract images from PDF with batch processing to prevent memory issues"""
         self.progress_update.emit("RESIZING", 5)
         try:
-            images = pdf2image.convert_from_path(pdf_path, dpi=300)
+            # Get total pages first
+            info = pdf2image.pdfinfo_from_path(pdf_path)
+            max_pages = info["Pages"]
+            batch_size = 5  # Process 5 pages at a time
+            images = []
+            
+            for i in range(0, max_pages, batch_size):
+                if self.should_stop:
+                    return images
+                    
+                # Process batch
+                batch = pdf2image.convert_from_path(
+                    pdf_path, dpi=300,
+                    first_page=i+1, 
+                    last_page=min(i+batch_size, max_pages)
+                )
+                images.extend(batch)
+                
+                # Update progress
+                progress = 5 + int(((i + batch_size) / max_pages) * 10)
+                self.progress_update.emit("RESIZING", min(progress, 15))
+                
+                del batch  # Free memory immediately
+            
             return images
         except Exception as e:
             print(f"Error extracting from PDF: {e}")
@@ -722,11 +886,19 @@ class ComicProcessor(QThread):
         self.progress_update.emit("RESIZING", 5)
         images = []
         try:
-            with zipfile.ZipFile(cbz_path, 'r') as cbz:
-                for filename in sorted(cbz.namelist()):
-                    if filename.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.webp')):
-                        cbz.extract(filename, path=tempfile.gettempdir())
-                        images.append(os.path.join(tempfile.gettempdir(), filename))
+            with tempfile.TemporaryDirectory() as temp_dir:
+                with zipfile.ZipFile(cbz_path, 'r') as cbz:
+                    for filename in sorted(cbz.namelist()):
+                        if filename.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.webp')):
+                            cbz.extract(filename, path=temp_dir)
+                            images.append(os.path.join(temp_dir, filename))
+                # Must copy files out of temp_dir before it's cleaned up
+                final_images = []
+                for img_path in images:
+                    final_path = os.path.join(tempfile.gettempdir(), os.path.basename(img_path))
+                    shutil.copy2(img_path, final_path)
+                    final_images.append(final_path)
+                return final_images
         except Exception as e:
             print(f"Error extracting from CBZ: {e}")
         return images
@@ -736,11 +908,19 @@ class ComicProcessor(QThread):
         self.progress_update.emit("RESIZING", 5)
         images = []
         try:
-            with rarfile.RarFile(cbr_path, 'r') as cbr:
-                for filename in sorted(cbr.namelist()):
-                    if filename.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.webp')):
-                        cbr.extract(filename, path=tempfile.gettempdir())
-                        images.append(os.path.join(tempfile.gettempdir(), filename))
+            with tempfile.TemporaryDirectory() as temp_dir:
+                with rarfile.RarFile(cbr_path, 'r') as cbr:
+                    for filename in sorted(cbr.namelist()):
+                        if filename.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.webp')):
+                            cbr.extract(filename, path=temp_dir)
+                            images.append(os.path.join(temp_dir, filename))
+                # Must copy files out of temp_dir before it's cleaned up
+                final_images = []
+                for img_path in images:
+                    final_path = os.path.join(tempfile.gettempdir(), os.path.basename(img_path))
+                    shutil.copy2(img_path, final_path)
+                    final_images.append(final_path)
+                return final_images
         except Exception as e:
             print(f"Error extracting from CBR: {e}")
         return images
@@ -842,6 +1022,14 @@ class ComicCruncher(QMainWindow):
         # Initialize UI state
         self.update_title()
         self.update_progress_labels()
+        
+        # Show GPU status in activity feed
+        if GPU_AVAILABLE:
+            self.add_to_feed("🚀 GPU acceleration enabled (OpenCV)", is_current=False)
+        else:
+            self.add_to_feed("💻 Using CPU processing (install opencv-python for GPU acceleration)", is_current=False)
+        
+        self.add_to_feed("Drop files to begin...", is_current=False)
     
     def init_ui(self):
         self.setWindowTitle("Comic Cruncher")
@@ -957,7 +1145,8 @@ class ComicCruncher(QMainWindow):
         self.activity_feed.setReadOnly(True)
         self.activity_feed.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.activity_feed.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.activity_feed.setText("Drop files to begin...")
+        # Initial status will be set in __init__ after GPU detection
+        self.activity_feed.setText("")
         info_layout.addWidget(self.activity_feed)
         content_layout.addWidget(info_frame)
         layout.addLayout(content_layout)
