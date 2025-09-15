@@ -567,6 +567,9 @@ class BatchProcessor(QThread):
                             # Use minimal compression for WebP files (already compressed)
                             cbz.write(img_path, os.path.basename(img_path))
                 
+                # Clean up temp directories created during extraction
+                self.cleanup_temp_directories(images)
+                
                 # Replace original
                 final_path = file_path.with_suffix('.cbz') if file_path.suffix.lower() != '.cbz' else file_path
                 if final_path.exists():
@@ -586,16 +589,39 @@ class BatchProcessor(QThread):
                 return ("success", original_size, new_size)
                 
         except PermissionError as e:
+            # Clean up temp directories on error
+            if 'images' in locals():
+                self.cleanup_temp_directories(images)
             return ("error", f"Permission denied: {str(e)}")
         except FileNotFoundError as e:
             return ("error", f"File not found: {str(e)}")
         except zipfile.BadZipFile as e:
             return ("error", f"Corrupted archive: {str(e)}")
         except Exception as e:
+            # Clean up temp directories on error
+            if 'images' in locals():
+                self.cleanup_temp_directories(images)
             return ("error", f"Processing failed: {str(e)}")
     
     def stop(self):
         self.should_stop = True
+    
+    def cleanup_temp_directories(self, image_paths):
+        """Clean up temporary directories created during extraction"""
+        temp_dirs = set()
+        for img_path in image_paths:
+            # Get the parent directory of each image
+            parent_dir = os.path.dirname(img_path)
+            # Check if it's a temp directory we created
+            if "comic_cruncher_" in parent_dir:
+                temp_dirs.add(parent_dir)
+        
+        # Remove all temp directories
+        for temp_dir in temp_dirs:
+            try:
+                shutil.rmtree(temp_dir, ignore_errors=True)
+            except Exception as e:
+                print(f"Warning: Could not clean up temp directory {temp_dir}: {e}")
     
     # Copy utility methods from ComicProcessor
     def is_already_crunched(self, file_path):
@@ -656,32 +682,32 @@ class BatchProcessor(QThread):
     def extract_from_cbz(self, cbz_path):
         images = []
         try:
-            with tempfile.TemporaryDirectory() as temp_dir:
-                with zipfile.ZipFile(cbz_path, 'r') as cbz:
-                    for filename in sorted(cbz.namelist()):
-                        if filename.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.webp')):
-                            cbz.extract(filename, path=temp_dir)
-                            images.append(os.path.join(temp_dir, filename))
-                # Process images while temp_dir exists
-                return list(images)  # Return copy before temp_dir is cleaned
-        except Exception:
-            pass
-        return images
+            # Create persistent temp directory
+            temp_dir = tempfile.mkdtemp(prefix="comic_cruncher_")
+            with zipfile.ZipFile(cbz_path, 'r') as cbz:
+                for filename in sorted(cbz.namelist()):
+                    if filename.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.webp')):
+                        cbz.extract(filename, path=temp_dir)
+                        images.append(os.path.join(temp_dir, filename))
+            return images
+        except Exception as e:
+            print(f"Error extracting from CBZ {cbz_path}: {e}")
+            return []
     
     def extract_from_cbr(self, cbr_path):
         images = []
         try:
-            with tempfile.TemporaryDirectory() as temp_dir:
-                with rarfile.RarFile(cbr_path, 'r') as cbr:
-                    for filename in sorted(cbr.namelist()):
-                        if filename.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.webp')):
-                            cbr.extract(filename, path=temp_dir)
-                            images.append(os.path.join(temp_dir, filename))
-                # Process images while temp_dir exists
-                return list(images)  # Return copy before temp_dir is cleaned
-        except Exception:
-            pass
-        return images
+            # Create persistent temp directory
+            temp_dir = tempfile.mkdtemp(prefix="comic_cruncher_")
+            with rarfile.RarFile(cbr_path, 'r') as cbr:
+                for filename in sorted(cbr.namelist()):
+                    if filename.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.webp')):
+                        cbr.extract(filename, path=temp_dir)
+                        images.append(os.path.join(temp_dir, filename))
+            return images
+        except Exception as e:
+            print(f"Error extracting from CBR {cbr_path}: {e}")
+            return []
 
 class ComicProcessor(QThread):
     """Background thread for processing comic files"""
@@ -812,6 +838,9 @@ class ComicProcessor(QThread):
                 if backup_path.exists():
                     os.remove(backup_path)
                 
+                # Clean up temporary extraction directories
+                self.cleanup_temp_directories(images)
+                
                 self.progress_update.emit("REPACKAGING", 100)
                 self.finished.emit(True, "Comic processed successfully!")
                 
@@ -822,6 +851,9 @@ class ComicProcessor(QThread):
         except FileNotFoundError as e:
             self.finished.emit(False, f"File Error: File not found or moved during processing.")
         except Exception as e:
+            # Clean up temp directories on error
+            if 'images' in locals():
+                self.cleanup_temp_directories(images)
             self.finished.emit(False, f"Error: {str(e)}")
         finally:
             # Cleanup any remaining temp files
@@ -886,47 +918,54 @@ class ComicProcessor(QThread):
         self.progress_update.emit("RESIZING", 5)
         images = []
         try:
-            with tempfile.TemporaryDirectory() as temp_dir:
-                with zipfile.ZipFile(cbz_path, 'r') as cbz:
-                    for filename in sorted(cbz.namelist()):
-                        if filename.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.webp')):
-                            cbz.extract(filename, path=temp_dir)
-                            images.append(os.path.join(temp_dir, filename))
-                # Must copy files out of temp_dir before it's cleaned up
-                final_images = []
-                for img_path in images:
-                    final_path = os.path.join(tempfile.gettempdir(), os.path.basename(img_path))
-                    shutil.copy2(img_path, final_path)
-                    final_images.append(final_path)
-                return final_images
+            # Create a persistent temp directory
+            temp_dir = tempfile.mkdtemp(prefix="comic_processor_")
+            with zipfile.ZipFile(cbz_path, 'r') as cbz:
+                for filename in sorted(cbz.namelist()):
+                    if filename.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.webp')):
+                        cbz.extract(filename, path=temp_dir)
+                        images.append(os.path.join(temp_dir, filename))
+            return images
         except Exception as e:
             print(f"Error extracting from CBZ: {e}")
-        return images
+            return []
     
     def extract_from_cbr(self, cbr_path):
         """Extract images from CBR"""
         self.progress_update.emit("RESIZING", 5)
         images = []
         try:
-            with tempfile.TemporaryDirectory() as temp_dir:
-                with rarfile.RarFile(cbr_path, 'r') as cbr:
-                    for filename in sorted(cbr.namelist()):
-                        if filename.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.webp')):
-                            cbr.extract(filename, path=temp_dir)
-                            images.append(os.path.join(temp_dir, filename))
-                # Must copy files out of temp_dir before it's cleaned up
-                final_images = []
-                for img_path in images:
-                    final_path = os.path.join(tempfile.gettempdir(), os.path.basename(img_path))
-                    shutil.copy2(img_path, final_path)
-                    final_images.append(final_path)
-                return final_images
+            # Create a persistent temp directory
+            temp_dir = tempfile.mkdtemp(prefix="comic_processor_")
+            with rarfile.RarFile(cbr_path, 'r') as cbr:
+                for filename in sorted(cbr.namelist()):
+                    if filename.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.webp')):
+                        cbr.extract(filename, path=temp_dir)
+                        images.append(os.path.join(temp_dir, filename))
+            return images
         except Exception as e:
             print(f"Error extracting from CBR: {e}")
-        return images
+            return []
     
     def stop(self):
         self.should_stop = True
+    
+    def cleanup_temp_directories(self, image_paths):
+        """Clean up temporary directories created during extraction"""
+        temp_dirs = set()
+        for img_path in image_paths:
+            # Get the parent directory of each image
+            parent_dir = os.path.dirname(img_path)
+            # Check if it's a temp directory we created
+            if "comic_processor_" in parent_dir:
+                temp_dirs.add(parent_dir)
+        
+        # Remove all temp directories
+        for temp_dir in temp_dirs:
+            try:
+                shutil.rmtree(temp_dir, ignore_errors=True)
+            except Exception as e:
+                print(f"Warning: Could not clean up temp directory {temp_dir}: {e}")
     
     def is_already_crunched(self, file_path):
         """Check if file already contains WebP images"""
