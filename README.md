@@ -155,22 +155,22 @@ Color Accuracy:          99.5%
 Text Sharpness:          100%
 ```
 
-## 🎯 Version Comparison
+## 🎯 Features Available
 
-| Feature | Free Version | Pro Version ($29.99) | Enterprise ($199) |
-|---------|-------------|---------------------|-------------------|
-| **Daily Limit** | 10 comics | Unlimited | Unlimited |
-| **Batch Size** | 5 files | Unlimited | Unlimited |
-| **Watermark** | Small corner | None | None |
-| **TPB Creator** | Limited | Full access | Full access |
-| **GPU Acceleration** | ❌ | ✅ | ✅ |
-| **Priority Queue** | ❌ | 4x faster | 10x faster |
-| **Cloud Integration** | ❌ | 1GB backup | Unlimited |
-| **API Access** | ❌ | ❌ | ✅ |
-| **Support** | Community | Email | Phone + Remote |
-| **Updates** | Basic | Lifetime | Lifetime + Beta |
+| Feature | Available | Description |
+|---------|-----------|-------------|
+| **Daily Limit** | Unlimited | Process as many comics as you want |
+| **Batch Size** | Unlimited | No restrictions on batch processing |
+| **Watermark** | None | Clean output files |
+| **TPB Creator** | ✅ Full access | Create Trade Paperback collections |
+| **GPU Acceleration** | ✅ If available | Uses your GPU when present |
+| **Processing Speed** | Maximum | No artificial throttling |
+| **Local Processing** | ✅ Always | Your files never leave your computer |
+| **API Access** | ✅ Open | Full programmatic access |
+| **Support** | Community | GitHub issues and discussions |
+| **Updates** | ✅ Forever free | All updates free via GitHub |
 
-**[🚀 Upgrade to Pro](https://gumroad.com/l/comic-cruncher-pro)**
+**This is completely FREE and open source software!**
 
 ## 🛠️ Advanced Configuration
 
@@ -340,7 +340,7 @@ MIT License - See [LICENSE](LICENSE) file for details.
 
 **Save Space. Keep Quality. Process Faster.**
 
-[![Download Now](https://img.shields.io/badge/Download-Free_Version-brightgreen?style=for-the-badge)](https://github.com/wesellis/CBR-to-CBZ-Converter/releases)
-[![Buy Pro](https://img.shields.io/badge/Buy-Pro_Version-gold?style=for-the-badge)](https://gumroad.com/l/comic-cruncher-pro)
+[![Download Now](https://img.shields.io/badge/Download-Free_Forever-brightgreen?style=for-the-badge)](https://github.com/wesellis/CBR-to-CBZ-Converter/releases)
+[![Star on GitHub](https://img.shields.io/github/stars/wesellis/CBR-to-CBZ-Converter?style=for-the-badge)](https://github.com/wesellis/CBR-to-CBZ-Converter)
 
 </div>
