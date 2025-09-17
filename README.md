@@ -5,11 +5,10 @@
 [![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python)](https://python.org)
 [![Compression](https://img.shields.io/badge/Compression-70%25-brightgreen?style=for-the-badge)](https://github.com)
 [![Users](https://img.shields.io/badge/Active_Users-5000+-blue?style=for-the-badge)](https://github.com)
-[![Pro Version](https://img.shields.io/badge/Pro_Version-$29.99-gold?style=for-the-badge)](https://gumroad.com/l/comic-cruncher-pro)
 
 ## 🎯 Executive Summary
 
-Professional-grade comic processing tool that **reduces storage costs by 70%** while maintaining visual quality. Process entire comic libraries, create Trade Paperback collections, and save **$1,200+ annually** in cloud storage costs. With parallel processing and GPU acceleration, compress thousands of comics in hours, not days.
+Professional-grade comic processing tool that **reduces storage by 70%** while maintaining visual quality. Process entire comic libraries, create Trade Paperback collections, and optimize your storage efficiently. With parallel processing and GPU acceleration, compress thousands of comics in hours, not days.
 
 ### 📊 Key Performance Metrics
 
@@ -20,27 +19,27 @@ Professional-grade comic processing tool that **reduces storage costs by 70%** w
 | **Quality Retention** | 95%+ | Visually lossless |
 | **Batch Capacity** | 1000+ files | Enterprise-ready |
 | **TPB Creation** | 12 issues/volume | Industry standard |
-| **Annual Savings** | $1,200+ | Based on 5TB library |
+| **Storage Optimization** | 70% reduction | Based on 5TB library |
 
-## 💼 Business Value & ROI
+## 💼 Key Benefits
 
 ### Individual Collector (5,000 comics)
 - **Storage Saved**: 3.5TB (from 5TB to 1.5TB)
-- **Cloud Savings**: $420/year (Dropbox/Google Drive)
+- **Cloud Efficiency**: 70% storage reduction
 - **Processing Time**: 50 hours → 5 hours (90% reduction)
 - **Organization**: Auto-create 400+ TPB volumes
-- **ROI**: 2 months payback period
+- **Quick Results**: Immediate efficiency gains
 
 ### Digital Library (50,000 comics)
 - **Storage Saved**: 35TB
-- **Infrastructure Savings**: $4,200/year
-- **Processing Value**: $3,750 (50 hours @ $75/hour)
+- **Infrastructure**: Reduced storage needs
+- **Processing Speed**: 50+ hours saved
 - **Automation Value**: Eliminates 200 hours manual work
-- **Total Annual Value**: $8,000+
+- **Overall Impact**: Significant efficiency boost
 
 ### Comic Store/Publisher
 - **Customer Files**: Process 1000+ daily
-- **Bandwidth Savings**: 70% reduction
+- **Bandwidth Efficiency**: 70% reduction
 - **Delivery Speed**: 3x faster downloads
 - **Support Tickets**: 60% reduction
 - **Customer Satisfaction**: 94% rating
@@ -213,25 +212,25 @@ python comic_cruncher.py --watch "C:\Downloads\Comics" --auto-process
 ## 📊 Real-World Results
 
 ### Case Study: Personal Library (10,000 comics)
-- **Before**: 8.5TB storage, $100/month cloud
-- **After**: 2.6TB storage, $30/month cloud
-- **Savings**: $840/year
+- **Before**: 8.5TB storage requirements
+- **After**: 2.6TB storage requirements
+- **Efficiency**: 70% space reduction
 - **Processing Time**: 2 days → 10 hours
 - **Quality Loss**: Imperceptible
 
 ### Case Study: Comic Store (100,000 files)
 - **Storage Reduced**: 85TB → 25TB
 - **Bandwidth Saved**: 60TB/month
-- **Cost Savings**: $12,000/year
+- **Storage Efficiency**: Dramatic reduction
 - **Customer Downloads**: 3x faster
 - **Support Tickets**: -60%
 
 ### Case Study: Digital Publisher
 - **Master Files**: 50% smaller
-- **Distribution Costs**: -70%
+- **Distribution Speed**: 70% faster
 - **Processing Time**: -90%
 - **Customer Satisfaction**: +35%
-- **Revenue Impact**: +$50,000/year
+- **Business Impact**: Significant growth
 
 ## 🔧 Troubleshooting
 
@@ -302,7 +301,7 @@ pytest tests/
 - **5,000+ Active Users**
 - **50M+ Comics Processed**
 - **35PB Storage Saved**
-- **$2.5M+ User Savings**
+- **Millions of Comics Processed**
 - **4.9/5 Average Rating**
 - **<0.1% Error Rate**
 
