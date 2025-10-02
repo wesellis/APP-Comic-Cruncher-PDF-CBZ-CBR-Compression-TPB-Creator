@@ -2,8 +2,19 @@
 
 A Python tool for compressing comic files and creating Trade Paperback collections.
 
-[![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=flat-square&logo=python)](https://python.org)
-[![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
+[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+[![Stars](https://img.shields.io/github/stars/wesellis/APP-Comic-Cruncher-PDF-CBZ-CBR-Compression-TPB-Creator?style=flat-square)](https://github.com/wesellis/APP-Comic-Cruncher-PDF-CBZ-CBR-Compression-TPB-Creator/stargazers)
+[![Last Commit](https://img.shields.io/github/last-commit/wesellis/APP-Comic-Cruncher-PDF-CBZ-CBR-Compression-TPB-Creator?style=flat-square)](https://github.com/wesellis/APP-Comic-Cruncher-PDF-CBZ-CBR-Compression-TPB-Creator/commits)
+
+## Screenshots
+
+### Comic Cruncher
+![Comic Cruncher](assets/pictures/ComicCruncher1.png)
+
+### TPB Creator / Comic Combiner
+![TPB Creator Mode 1](assets/pictures/ComicCombiner1.png)
+![TPB Creator Mode 2](assets/pictures/ComicCombiner2.png)
 
 ## Features
 
